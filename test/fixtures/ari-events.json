@@ -1,0 +1,200 @@
+{
+  "info": {
+    "build": {
+      "os": "Linux",
+      "kernel": "6.8.0-generic",
+      "machine": "x86_64",
+      "options": "OPTIONAL_API",
+      "date": "2026-11-11 15:45:05 UTC",
+      "user": "root"
+    },
+    "system": {
+      "version": "23.5.0",
+      "entity_id": "02:00:5e:00:53:01"
+    },
+    "config": {
+      "name": "",
+      "default_language": "en",
+      "setid": {
+        "user": "",
+        "group": ""
+      }
+    },
+    "status": {
+      "startup_time": "2026-11-12T21:27:08.227+0000",
+      "last_reload_time": "2026-11-12T21:27:08.227+0000"
+    }
+  },
+  "StasisStart": {
+    "type": "StasisStart",
+    "timestamp": "2026-11-12T21:30:28.949+0000",
+    "args": ["gladys-outgoing"],
+    "channel": {
+      "id": "gladys-cap-1",
+      "name": "Local/100@phones-00000009;1",
+      "state": "Up",
+      "protocol_id": "",
+      "caller": {
+        "name": "",
+        "number": ""
+      },
+      "connected": {
+        "name": "",
+        "number": ""
+      },
+      "accountcode": "",
+      "dialplan": {
+        "context": "phones",
+        "exten": "100",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "gladys,gladys-outgoing"
+      },
+      "creationtime": "2026-11-12T21:30:28.948+0000",
+      "language": "en"
+    },
+    "asterisk_id": "02:00:5e:00:53:01",
+    "application": "gladys"
+  },
+  "PlaybackFinished": {
+    "type": "PlaybackFinished",
+    "timestamp": "2026-11-12T21:30:30.953+0000",
+    "playback": {
+      "id": "gladys-cap-1-p1",
+      "media_uri": "sound:custom/alarm",
+      "target_uri": "channel:gladys-cap-1",
+      "language": "en",
+      "state": "done"
+    },
+    "asterisk_id": "02:00:5e:00:53:01",
+    "application": "gladys"
+  },
+  "ChannelDtmfReceived": {
+    "type": "ChannelDtmfReceived",
+    "timestamp": "2026-11-12T21:30:32.155+0000",
+    "digit": "1",
+    "duration_ms": 100,
+    "channel": {
+      "id": "gladys-cap-1",
+      "name": "Local/100@phones-00000009;1",
+      "state": "Up",
+      "protocol_id": "",
+      "caller": {
+        "name": "",
+        "number": ""
+      },
+      "connected": {
+        "name": "",
+        "number": ""
+      },
+      "accountcode": "",
+      "dialplan": {
+        "context": "phones",
+        "exten": "100",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "gladys,gladys-outgoing"
+      },
+      "creationtime": "2026-11-12T21:30:28.948+0000",
+      "language": "en"
+    },
+    "asterisk_id": "02:00:5e:00:53:01",
+    "application": "gladys"
+  },
+  "ChannelDestroyed": {
+    "type": "ChannelDestroyed",
+    "timestamp": "2026-11-12T21:30:32.950+0000",
+    "cause": 16,
+    "cause_txt": "Normal Clearing",
+    "channel": {
+      "id": "gladys-cap-1",
+      "name": "Local/100@phones-00000009;1",
+      "state": "Up",
+      "protocol_id": "",
+      "caller": {
+        "name": "",
+        "number": ""
+      },
+      "connected": {
+        "name": "",
+        "number": ""
+      },
+      "accountcode": "",
+      "dialplan": {
+        "context": "phones",
+        "exten": "100",
+        "priority": 1,
+        "app_name": "AppDial2",
+        "app_data": "(Outgoing Line)"
+      },
+      "creationtime": "2026-11-12T21:30:28.948+0000",
+      "language": "en"
+    },
+    "asterisk_id": "02:00:5e:00:53:01",
+    "application": "gladys"
+  },
+  "ChannelDestroyedNoAnswer": {
+    "type": "ChannelDestroyed",
+    "timestamp": "2026-11-12T21:30:35.959+0000",
+    "cause": 19,
+    "cause_txt": "User alerting, no answer",
+    "channel": {
+      "id": "gladys-cap-2",
+      "name": "Local/102@phones-0000000a;1",
+      "state": "Ringing",
+      "protocol_id": "",
+      "caller": {
+        "name": "",
+        "number": ""
+      },
+      "connected": {
+        "name": "",
+        "number": ""
+      },
+      "accountcode": "",
+      "dialplan": {
+        "context": "phones",
+        "exten": "102",
+        "priority": 1,
+        "app_name": "AppDial2",
+        "app_data": "(Outgoing Line)"
+      },
+      "creationtime": "2026-11-12T21:30:32.955+0000",
+      "language": "en"
+    },
+    "asterisk_id": "02:00:5e:00:53:01",
+    "application": "gladys"
+  },
+  "IncomingStasisStart": {
+    "type": "StasisStart",
+    "timestamp": "2026-11-12T21:30:34.308+0000",
+    "args": ["incoming"],
+    "channel": {
+      "id": "1794519034.23",
+      "name": "Local/0600000001@sim-0000000b;2",
+      "state": "Ring",
+      "protocol_id": "",
+      "caller": {
+        "name": "Alice",
+        "number": "0600000001"
+      },
+      "connected": {
+        "name": "",
+        "number": ""
+      },
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-trunk",
+        "exten": "5000",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "gladys,incoming"
+      },
+      "creationtime": "2026-11-12T21:30:34.308+0000",
+      "language": "en"
+    },
+    "asterisk_id": "02:00:5e:00:53:01",
+    "application": "gladys"
+  },
+  "_source": "Captured from Asterisk 23.5.0 (Docker image andrius/asterisk) on 2026-11-12 with Local channels; entity id replaced by a documentation MAC address."
+}

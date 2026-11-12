@@ -30,6 +30,14 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration holds: the ARI address, user and password of your Asterisk server, stored by Gladys in the
+integration configuration (nothing is written under `/data`). The password travels in the ARI requests (HTTP Basic)
+and in the address of the ARI event WebSocket (`api_key`): use ARI over your local network only, or behind TLS
+(`https://`), and never log that address. The integration places calls only to the numbers of its allow-list, and
+plays only Asterisk media (no URL).
+
+Network: it only opens connections to the configured ARI address; it publishes no port.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+Asterisk, FreePBX, and the phone operators they call through.

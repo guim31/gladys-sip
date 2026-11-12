@@ -1,101 +1,344 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "SIP voice calls (Asterisk)",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Call a phone from a scene and play a message; react to incoming calls (Asterisk, FreePBX).",
+    "fr": "Appelez un téléphone depuis une scène pour lire un message ; réagissez aux appels (Asterisk).",
+    "de": "Rufe aus einer Szene ein Telefon an und spiele eine Nachricht ab; reagiere auf Anrufe (Asterisk).",
+    "es": "Llame a un teléfono desde una escena con un mensaje; reaccione a las llamadas (Asterisk, FreePBX)."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-sip:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-sip/main/cover.png",
+  "categories": ["notifications", "security", "protocols"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Asterisk server",
+        "fr": "Serveur Asterisk",
+        "de": "Asterisk-Server",
+        "es": "Servidor Asterisk"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "The integration drives your own Asterisk or FreePBX through ARI (Asterisk REST Interface). Create an ARI user first: the documentation gives each step.",
+        "fr": "L'intégration pilote votre propre Asterisk ou FreePBX par ARI (Asterisk REST Interface). Créez d'abord un utilisateur ARI : la documentation donne chaque étape.",
+        "de": "Die Integration steuert dein eigenes Asterisk oder FreePBX über ARI (Asterisk REST Interface). Lege zuerst einen ARI-Benutzer an: Die Dokumentation zeigt jeden Schritt.",
+        "es": "La integración controla su propio Asterisk o FreePBX mediante ARI (Asterisk REST Interface). Cree primero un usuario ARI: la documentación detalla cada paso."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://docs.asterisk.org/Configuration/Interfaces/Asterisk-REST-Interface-ARI/",
+          "label": {
+            "en": "ARI documentation",
+            "fr": "Documentation ARI",
+            "de": "ARI-Dokumentation",
+            "es": "Documentación de ARI"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "ari_url",
+      "type": "string",
+      "label": {
+        "en": "ARI address",
+        "fr": "Adresse ARI",
+        "de": "ARI-Adresse",
+        "es": "Dirección ARI"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "description": {
+        "en": "Address of the Asterisk HTTP server (http.conf), port included.",
+        "fr": "Adresse du serveur HTTP d'Asterisk (http.conf), port compris.",
+        "de": "Adresse des HTTP-Servers von Asterisk (http.conf), mit Port.",
+        "es": "Dirección del servidor HTTP de Asterisk (http.conf), con el puerto."
+      },
+      "placeholder": {
+        "en": "e.g. http://192.168.1.10:8088",
+        "fr": "ex. http://192.168.1.10:8088",
+        "de": "z. B. http://192.168.1.10:8088",
+        "es": "p. ej. http://192.168.1.10:8088"
+      },
+      "required": true
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+      "key": "ari_username",
+      "type": "string",
+      "label": {
+        "en": "ARI user",
+        "fr": "Utilisateur ARI",
+        "de": "ARI-Benutzer",
+        "es": "Usuario ARI"
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "required": true
     },
     {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "key": "ari_password",
+      "type": "secret",
+      "label": {
+        "en": "ARI password",
+        "fr": "Mot de passe ARI",
+        "de": "ARI-Passwort",
+        "es": "Contraseña ARI"
+      },
+      "required": true
+    },
+    {
+      "key": "ari_app",
+      "type": "string",
+      "label": {
+        "en": "Stasis application",
+        "fr": "Application Stasis",
+        "de": "Stasis-Anwendung",
+        "es": "Aplicación Stasis"
+      },
+      "description": {
+        "en": "Name used in the dialplan: Stasis(gladys).",
+        "fr": "Nom utilisé dans le plan de numérotation : Stasis(gladys).",
+        "de": "Name im Wählplan: Stasis(gladys).",
+        "es": "Nombre usado en el plan de marcación: Stasis(gladys)."
+      },
       "required": false,
-      "default": "celsius",
+      "default": "gladys"
+    },
+    {
+      "key": "calls",
+      "type": "section",
+      "label": {
+        "en": "Calls",
+        "fr": "Appels",
+        "de": "Anrufe",
+        "es": "Llamadas"
+      },
+      "description": {
+        "en": "Only the allowed numbers can be called. Never add premium-rate numbers: a scene could call them in a loop.",
+        "fr": "Seuls les numéros autorisés peuvent être appelés. N'ajoutez jamais de numéro surtaxé : une scène pourrait l'appeler en boucle.",
+        "de": "Nur die erlaubten Nummern können angerufen werden. Füge nie kostenpflichtige Sondernummern hinzu: Eine Szene könnte sie in Schleife anrufen.",
+        "es": "Solo se puede llamar a los números permitidos. No añada nunca números de tarificación especial: una escena podría llamarlos en bucle."
+      }
+    },
+    {
+      "key": "allowed_numbers",
+      "type": "string",
+      "label": {
+        "en": "Allowed numbers",
+        "fr": "Numéros autorisés",
+        "de": "Erlaubte Nummern",
+        "es": "Números permitidos"
+      },
+      "description": {
+        "en": "Numbers the scenes may call, separated by commas, written as you would dial them.",
+        "fr": "Numéros que les scènes peuvent appeler, séparés par des virgules, écrits comme vous les composeriez.",
+        "de": "Nummern, die Szenen anrufen dürfen, durch Kommas getrennt, so geschrieben, wie du sie wählst.",
+        "es": "Números a los que pueden llamar las escenas, separados por comas, escritos como los marcaría."
+      },
+      "placeholder": {
+        "en": "e.g. +33612345678, 100",
+        "fr": "ex. 0612345678, 100",
+        "de": "z. B. +4915112345678, 100",
+        "es": "p. ej. +34612345678, 100"
+      },
+      "required": false
+    },
+    {
+      "key": "endpoint",
+      "type": "string",
+      "label": {
+        "en": "Dial string",
+        "fr": "Chaîne de numérotation",
+        "de": "Wählstring",
+        "es": "Cadena de marcación"
+      },
+      "description": {
+        "en": "Channel to call, {number} being replaced: PJSIP/{number}@my-trunk for an operator trunk, PJSIP/{number} for a local phone, Local/{number}@from-internal on FreePBX.",
+        "fr": "Canal à appeler, {number} étant remplacé : PJSIP/{number}@mon-trunk pour le trunk de l'opérateur, PJSIP/{number} pour un poste local, Local/{number}@from-internal sur FreePBX.",
+        "de": "Anzurufender Kanal, {number} wird ersetzt: PJSIP/{number}@mein-trunk für den Trunk des Anbieters, PJSIP/{number} für ein lokales Telefon, Local/{number}@from-internal bei FreePBX.",
+        "es": "Canal al que llamar, {number} se sustituye: PJSIP/{number}@mi-trunk para el trunk del operador, PJSIP/{number} para un teléfono local, Local/{number}@from-internal en FreePBX."
+      },
+      "required": false,
+      "default": "PJSIP/{number}@trunk"
+    },
+    {
+      "key": "caller_id",
+      "type": "string",
+      "label": {
+        "en": "Caller ID",
+        "fr": "Identifiant d'appelant",
+        "de": "Anrufer-ID",
+        "es": "Identificador de llamada"
+      },
+      "description": {
+        "en": "Shown on the phone called; the operator may replace it.",
+        "fr": "Affiché sur le téléphone appelé ; l'opérateur peut le remplacer.",
+        "de": "Wird auf dem angerufenen Telefon angezeigt; der Anbieter kann sie ersetzen.",
+        "es": "Se muestra en el teléfono llamado; el operador puede sustituirlo."
+      },
+      "placeholder": {
+        "en": "e.g. Gladys <100>",
+        "fr": "ex. Gladys <100>",
+        "de": "z. B. Gladys <100>",
+        "es": "p. ej. Gladys <100>"
+      },
+      "required": false
+    },
+    {
+      "key": "incoming_mode",
+      "type": "select",
+      "label": {
+        "en": "Incoming calls",
+        "fr": "Appels entrants",
+        "de": "Eingehende Anrufe",
+        "es": "Llamadas entrantes"
+      },
+      "description": {
+        "en": "What happens to a call sent to Stasis once Gladys has seen it.",
+        "fr": "Ce que devient un appel envoyé dans Stasis une fois vu par Gladys.",
+        "de": "Was mit einem an Stasis gesendeten Anruf passiert, nachdem Gladys ihn gesehen hat.",
+        "es": "Qué ocurre con una llamada enviada a Stasis una vez vista por Gladys."
+      },
+      "required": false,
+      "default": "continue",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "continue",
+          "label": {
+            "en": "Continue in the dialplan (phones ring)",
+            "fr": "Continuer dans le plan (les postes sonnent)",
+            "de": "Im Wählplan weiter (Telefone klingeln)",
+            "es": "Seguir en el plan (suenan los teléfonos)"
+          }
+        },
+        {
+          "value": "hangup",
+          "label": {
+            "en": "Hang up without answering",
+            "fr": "Raccrocher sans décrocher",
+            "de": "Auflegen, ohne abzunehmen",
+            "es": "Colgar sin contestar"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the texts",
+        "fr": "Langue des textes",
+        "de": "Sprache der Texte",
+        "es": "Idioma de los textos"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Language of the feature names and of the call results.",
+        "fr": "Langue des noms des fonctionnalités et des résultats d'appel.",
+        "de": "Sprache der Funktionsnamen und der Anrufergebnisse.",
+        "es": "Idioma de los nombres de las funciones y de los resultados de llamada."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
+      "timeout_seconds": 15
     },
     {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
+      "key": "test_call",
+      "label": {
+        "en": "Test call",
+        "fr": "Appel de test",
+        "de": "Testanruf",
+        "es": "Llamada de prueba"
+      },
+      "timeout_seconds": 15,
       "fields": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
+          "key": "number",
+          "type": "string",
+          "label": {
+            "en": "Number",
+            "fr": "Numéro",
+            "de": "Nummer",
+            "es": "Número"
+          },
+          "placeholder": {
+            "en": "e.g. +33612345678",
+            "fr": "ex. 0612345678",
+            "de": "z. B. +4915112345678",
+            "es": "p. ej. +34612345678"
+          },
+          "required": true
+        },
+        {
+          "key": "message",
+          "type": "string",
+          "label": {
+            "en": "Message (Asterisk sounds)",
+            "fr": "Message (sons Asterisk)",
+            "de": "Nachricht (Asterisk-Sounds)",
+            "es": "Mensaje (sonidos Asterisk)"
+          },
+          "description": {
+            "en": "Sounds recorded on Asterisk, separated by commas, without extension.",
+            "fr": "Sons enregistrés sur Asterisk, séparés par des virgules, sans extension.",
+            "de": "Auf Asterisk aufgenommene Sounds, durch Kommas getrennt, ohne Endung.",
+            "es": "Sonidos grabados en Asterisk, separados por comas, sin extensión."
+          },
+          "placeholder": {
+            "en": "e.g. custom/alarm",
+            "fr": "ex. custom/alarme",
+            "de": "z. B. custom/alarm",
+            "es": "p. ej. custom/alarma"
+          },
           "required": true
         }
       ]
@@ -103,75 +346,457 @@
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "call_received",
+      "label": {
+        "en": "Incoming call",
+        "fr": "Appel reçu",
+        "de": "Eingehender Anruf",
+        "es": "Llamada recibida"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "A call routed to Stasis(gladys) by the dialplan arrived.",
+        "fr": "Un appel envoyé dans Stasis(gladys) par le plan de numérotation est arrivé.",
+        "de": "Ein vom Wählplan an Stasis(gladys) geleiteter Anruf ist angekommen.",
+        "es": "Ha llegado una llamada enviada a Stasis(gladys) por el plan de marcación."
       },
       "fields": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "key": "caller",
+          "type": "string",
+          "label": {
+            "en": "Caller number",
+            "fr": "Numéro de l'appelant",
+            "de": "Nummer des Anrufers",
+            "es": "Número de quien llama"
+          },
+          "placeholder": {
+            "en": "e.g. +33612345678",
+            "fr": "ex. 0612345678",
+            "de": "z. B. +4915112345678",
+            "es": "p. ej. +34612345678"
+          }
         },
         {
-          "key": "target",
+          "key": "called",
+          "type": "string",
+          "label": {
+            "en": "Number called (extension)",
+            "fr": "Numéro appelé (extension)",
+            "de": "Angerufene Nummer (Durchwahl)",
+            "es": "Número llamado (extensión)"
+          },
+          "placeholder": {
+            "en": "e.g. 5000",
+            "fr": "ex. 5000",
+            "de": "z. B. 5000",
+            "es": "p. ej. 5000"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "caller",
+          "type": "string",
+          "label": {
+            "en": "Caller number",
+            "fr": "Numéro de l'appelant",
+            "de": "Nummer des Anrufers",
+            "es": "Número de quien llama"
+          }
+        },
+        {
+          "key": "caller_name",
+          "type": "string",
+          "label": {
+            "en": "Caller name",
+            "fr": "Nom de l'appelant",
+            "de": "Name des Anrufers",
+            "es": "Nombre de quien llama"
+          }
+        },
+        {
+          "key": "called",
+          "type": "string",
+          "label": {
+            "en": "Number called",
+            "fr": "Numéro appelé",
+            "de": "Angerufene Nummer",
+            "es": "Número llamado"
+          }
+        }
+      ]
+    },
+    {
+      "key": "call_finished",
+      "label": {
+        "en": "Outgoing call ended",
+        "fr": "Appel passé terminé",
+        "de": "Ausgehender Anruf beendet",
+        "es": "Llamada realizada terminada"
+      },
+      "description": {
+        "en": "A call started by a scene ended, after its last attempt.",
+        "fr": "Un appel lancé par une scène est terminé, après sa dernière tentative.",
+        "de": "Ein von einer Szene gestarteter Anruf ist nach dem letzten Versuch beendet.",
+        "es": "Una llamada iniciada por una escena ha terminado, tras su último intento."
+      },
+      "fields": [
+        {
+          "key": "number",
+          "type": "string",
+          "label": {
+            "en": "Number",
+            "fr": "Numéro",
+            "de": "Nummer",
+            "es": "Número"
+          },
+          "placeholder": {
+            "en": "e.g. +33612345678",
+            "fr": "ex. 0612345678",
+            "de": "z. B. +4915112345678",
+            "es": "p. ej. +34612345678"
+          }
+        },
+        {
+          "key": "result",
           "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "label": {
+            "en": "Result",
+            "fr": "Résultat",
+            "de": "Ergebnis",
+            "es": "Resultado"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "acknowledged",
+              "label": {
+                "en": "Acknowledged (1 pressed)",
+                "fr": "Acquitté (touche 1)",
+                "de": "Bestätigt (Taste 1)",
+                "es": "Confirmada (tecla 1)"
+              }
+            },
+            {
+              "value": "answered",
+              "label": {
+                "en": "Answered",
+                "fr": "Décroché",
+                "de": "Angenommen",
+                "es": "Contestada"
+              }
+            },
+            {
+              "value": "no_answer",
+              "label": {
+                "en": "No answer",
+                "fr": "Sans réponse",
+                "de": "Keine Antwort",
+                "es": "Sin respuesta"
+              }
+            },
+            {
+              "value": "busy",
+              "label": {
+                "en": "Busy",
+                "fr": "Occupé",
+                "de": "Besetzt",
+                "es": "Ocupado"
+              }
+            },
+            {
+              "value": "failed",
+              "label": {
+                "en": "Failed",
+                "fr": "Échec",
+                "de": "Fehlgeschlagen",
+                "es": "Error"
+              }
+            },
+            {
+              "value": "cancelled",
+              "label": {
+                "en": "Cancelled",
+                "fr": "Annulé",
+                "de": "Abgebrochen",
+                "es": "Cancelada"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "number",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Number",
+            "fr": "Numéro",
+            "de": "Nummer",
+            "es": "Número"
+          }
+        },
+        {
+          "key": "result",
+          "type": "string",
+          "label": {
+            "en": "Result",
+            "fr": "Résultat",
+            "de": "Ergebnis",
+            "es": "Resultado"
+          }
+        },
+        {
+          "key": "attempts",
+          "type": "number",
+          "label": {
+            "en": "Attempts",
+            "fr": "Tentatives",
+            "de": "Versuche",
+            "es": "Intentos"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
+      "key": "call",
+      "label": {
+        "en": "Call and play a message",
+        "fr": "Appeler et lire un message",
+        "de": "Anrufen und Nachricht abspielen",
+        "es": "Llamar y reproducir un mensaje"
+      },
       "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+        "en": "Calls an allowed number, plays the message, and calls again if needed.",
+        "fr": "Appelle un numéro autorisé, lit le message, et rappelle si besoin.",
+        "de": "Ruft eine erlaubte Nummer an, spielt die Nachricht ab und ruft bei Bedarf erneut an.",
+        "es": "Llama a un número permitido, reproduce el mensaje y vuelve a llamar si hace falta."
       },
       "timeout_seconds": 15,
       "fields": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
+          "key": "number",
+          "type": "string",
+          "label": {
+            "en": "Number",
+            "fr": "Numéro",
+            "de": "Nummer",
+            "es": "Número"
+          },
+          "placeholder": {
+            "en": "e.g. +33612345678",
+            "fr": "ex. 0612345678",
+            "de": "z. B. +4915112345678",
+            "es": "p. ej. +34612345678"
+          },
           "required": true
+        },
+        {
+          "key": "message",
+          "type": "string",
+          "label": {
+            "en": "Message (Asterisk sounds)",
+            "fr": "Message (sons Asterisk)",
+            "de": "Nachricht (Asterisk-Sounds)",
+            "es": "Mensaje (sonidos Asterisk)"
+          },
+          "description": {
+            "en": "Sounds recorded on Asterisk, separated by commas, without extension.",
+            "fr": "Sons enregistrés sur Asterisk, séparés par des virgules, sans extension.",
+            "de": "Auf Asterisk aufgenommene Sounds, durch Kommas getrennt, ohne Endung.",
+            "es": "Sonidos grabados en Asterisk, separados por comas, sin extensión."
+          },
+          "placeholder": {
+            "en": "e.g. custom/alarm",
+            "fr": "ex. custom/alarme",
+            "de": "z. B. custom/alarm",
+            "es": "p. ej. custom/alarma"
+          },
+          "required": true
+        },
+        {
+          "key": "repeat",
+          "type": "number",
+          "label": {
+            "en": "Plays of the message",
+            "fr": "Lectures du message",
+            "de": "Wiedergaben der Nachricht",
+            "es": "Reproducciones del mensaje"
+          },
+          "required": false,
+          "default": 2,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "key": "attempts",
+          "type": "number",
+          "label": {
+            "en": "Attempts",
+            "fr": "Tentatives",
+            "de": "Versuche",
+            "es": "Intentos"
+          },
+          "required": false,
+          "default": 3,
+          "min": 1,
+          "max": 10
+        },
+        {
+          "key": "retry_delay",
+          "type": "number",
+          "label": {
+            "en": "Delay between attempts (s)",
+            "fr": "Délai entre tentatives (s)",
+            "de": "Pause zwischen Versuchen (s)",
+            "es": "Espera entre intentos (s)"
+          },
+          "required": false,
+          "default": 60,
+          "min": 0,
+          "max": 3600
+        },
+        {
+          "key": "ring_timeout",
+          "type": "number",
+          "label": {
+            "en": "Ringing time (s)",
+            "fr": "Durée de sonnerie (s)",
+            "de": "Klingeldauer (s)",
+            "es": "Tiempo de timbre (s)"
+          },
+          "required": false,
+          "default": 30,
+          "min": 10,
+          "max": 120
+        },
+        {
+          "key": "require_ack",
+          "type": "boolean",
+          "label": {
+            "en": "Wait for 1 to be pressed",
+            "fr": "Attendre l'appui sur 1",
+            "de": "Auf Taste 1 warten",
+            "es": "Esperar a que se pulse 1"
+          },
+          "description": {
+            "en": "Calls again until someone presses 1 (alarm acknowledged).",
+            "fr": "Rappelle tant que personne n'appuie sur 1 (alarme acquittée).",
+            "de": "Ruft erneut an, bis jemand 1 drückt (Alarm bestätigt).",
+            "es": "Vuelve a llamar hasta que alguien pulse 1 (alarma confirmada)."
+          },
+          "required": false,
+          "default": false
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
+          "key": "started",
           "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "label": {
+            "en": "Call started",
+            "fr": "Appel lancé",
+            "de": "Anruf gestartet",
+            "es": "Llamada iniciada"
+          }
+        },
+        {
+          "key": "call_id",
+          "type": "string",
+          "label": {
+            "en": "Call identifier",
+            "fr": "Identifiant de l'appel",
+            "de": "Anruf-ID",
+            "es": "Identificador de la llamada"
+          }
+        }
+      ]
+    },
+    {
+      "key": "cancel_calls",
+      "label": {
+        "en": "Stop the calls",
+        "fr": "Arrêter les appels",
+        "de": "Anrufe stoppen",
+        "es": "Detener las llamadas"
+      },
+      "description": {
+        "en": "Hangs up and stops the retries, for one number or for all.",
+        "fr": "Raccroche et arrête les rappels, pour un numéro ou pour tous.",
+        "de": "Legt auf und stoppt die Wiederholungen, für eine Nummer oder alle.",
+        "es": "Cuelga y detiene los reintentos, para un número o para todos."
+      },
+      "timeout_seconds": 15,
+      "fields": [
+        {
+          "key": "number",
+          "type": "string",
+          "label": {
+            "en": "Number",
+            "fr": "Numéro",
+            "de": "Nummer",
+            "es": "Número"
+          },
+          "placeholder": {
+            "en": "e.g. +33612345678",
+            "fr": "ex. 0612345678",
+            "de": "z. B. +4915112345678",
+            "es": "p. ej. +34612345678"
+          },
+          "description": {
+            "en": "Empty: every call.",
+            "fr": "Vide : tous les appels.",
+            "de": "Leer: alle Anrufe.",
+            "es": "Vacío: todas las llamadas."
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "key": "cancelled",
+          "type": "number",
+          "label": {
+            "en": "Calls stopped",
+            "fr": "Appels arrêtés",
+            "de": "Gestoppte Anrufe",
+            "es": "Llamadas detenidas"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "sip",
+      "label": {
+        "en": "Phone calls",
+        "fr": "Appels téléphoniques",
+        "de": "Telefonanrufe",
+        "es": "Llamadas telefónicas"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Asterisk link, calls in progress, last calls, a button to stop the calls.",
+        "fr": "Lien Asterisk, appels en cours, derniers appels, bouton pour arrêter les appels.",
+        "de": "Asterisk-Verbindung, laufende und letzte Anrufe, Taste zum Stoppen der Anrufe.",
+        "es": "Enlace Asterisk, llamadas en curso y últimas, botón para detener las llamadas."
+      },
+      "icon": "phone",
+      "action_timeout_seconds": 15,
+      "settings": [
+        {
+          "key": "show_cancel",
+          "type": "boolean",
+          "label": {
+            "en": "Show the stop button",
+            "fr": "Afficher le bouton d'arrêt",
+            "de": "Stopp-Taste anzeigen",
+            "es": "Mostrar el botón de parada"
+          },
+          "required": false,
+          "default": true
+        }
+      ]
     }
   ]
 }

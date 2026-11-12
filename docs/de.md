@@ -1,0 +1,144 @@
+# SIP-Sprachanrufe (Asterisk)
+
+Rufe aus einer Gladys-Szene ein Telefon an und spiele ihm eine Nachricht ab (Alarm, Wasserleck, offene Tür), und
+reagiere auf eingehende Anrufe (das Tor öffnen, wenn eine bekannte Nummer anruft). Die Integration steuert **dein
+eigenes Asterisk oder FreePBX** über ARI, die REST-Schnittstelle von Asterisk: Sie spricht nie selbst SIP, das
+übernimmt dein Telefonserver.
+
+Ohne Anbieterleitung entwickelt: getestet mit Asterisk 23.5 in Docker und simulierten Telefonen. Rückmeldungen
+sind willkommen.
+
+## Was du bekommst
+
+- Eine Szenenaktion **„Anrufen und Nachricht abspielen“**: ruft eine erlaubte Nummer an, spielt die Nachricht ein-
+  oder mehrmals ab und ruft erneut an, wenn niemand abnimmt. Optional gilt der Anruf erst als **bestätigt**, wenn
+  jemand **1** drückt: Bis dahin ruft die Integration weiter an (bis zur Zahl der Versuche).
+- Eine Szenenaktion **„Anrufe stoppen“**: legt auf und bricht die Wiederholungen ab (Fehlalarm).
+- Ein Auslöser **„Eingehender Anruf“**, gefiltert nach Nummer des Anrufers und angerufener Nummer, mit Nummer und
+  Name des Anrufers als Variablen.
+- Ein Auslöser **„Ausgehender Anruf beendet“**, gefiltert nach Nummer und Ergebnis (bestätigt, angenommen, keine
+  Antwort, besetzt, fehlgeschlagen, abgebrochen).
+- Ein Gerät **Asterisk-Server**: Server erreichbar, letzter eingehender Anruf, letzter ausgehender Anruf.
+- Ein Dashboard-Widget **Telefonanrufe**.
+
+## Voraussetzungen: Asterisk
+
+1. Aktiviere den HTTP-Server in `/etc/asterisk/http.conf`:
+
+   ```ini
+   [general]
+   enabled=yes
+   bindaddr=0.0.0.0
+   bindport=8088
+   ```
+
+2. Lege einen ARI-Benutzer in `/etc/asterisk/ari.conf` an (wähle ein langes Passwort):
+
+   ```ini
+   [general]
+   enabled=yes
+
+   [gladys]
+   type=user
+   read_only=no
+   password=ein-langes-zufaelliges-passwort
+   ```
+
+3. Nimm deine Nachrichten auf. Eine Nachricht besteht aus einem oder mehreren Asterisk-Sounds: Lege `alarm.wav`
+   (8 kHz mono) in `/var/lib/asterisk/sounds/de/custom/` ab und verwende `custom/alarm`. Die Medien `digits:1234`,
+   `number:42` und `tone:ring` funktionieren auch.
+4. Für eingehende Anrufe leitest du die Anrufe im Kontext des Anbieter-Trunks in `extensions.conf` an die
+   Integration, bevor deine Telefone klingeln:
+
+   ```ini
+   [from-trunk]
+   exten => _X.,1,Stasis(gladys)
+    same => n,Dial(PJSIP/100,30)
+   ```
+
+   Ist die Integration gestoppt, schlägt `Stasis()` sofort fehl und der Anruf geht weiter: Deine Telefone klingeln
+   trotzdem.
+
+5. Ausgehende Anrufe laufen über den Trunk deines Anbieters: Der Wählstring `PJSIP/{number}@mein-trunk` ruft über
+   den PJSIP-Endpunkt `mein-trunk` an. Führe nach diesen Änderungen `core reload` aus.
+
+## Voraussetzungen: FreePBX
+
+1. **Settings → Asterisk REST Interface Users**: Füge einen Benutzer hinzu (Lesen/Schreiben) und notiere sein
+   Passwort. Prüfe unter **Settings → Advanced Settings**, dass der eingebaute HTTP-Server von Asterisk aktiv ist
+   (Port 8088).
+2. **Admin → System Recordings**: Nimm die Nachrichten auf oder lade sie hoch; eine Aufnahme namens `alarm` ist der
+   Sound `custom/alarm`.
+3. Wählstring: `Local/{number}@from-internal`, damit die ausgehenden Routen von FreePBX den Trunk wählen.
+4. Eingehende Anrufe: Füge in `extensions_custom.conf` einen Kontext hinzu, der über Stasis und dann zu deiner
+   eingehenden Route führt, und lass eine **Custom Destination** oder den Trunk-Kontext darauf zeigen:
+
+   ```ini
+   [gladys-incoming]
+   exten => _X.,1,Stasis(gladys)
+    same => n,Goto(from-trunk,${EXTEN},1)
+   ```
+
+## Konfiguration
+
+| Feld               | Verwendung                                                                                        |
+| ------------------ | ------------------------------------------------------------------------------------------------- |
+| ARI-Adresse        | `http://<Adresse des Servers>:8088`                                                               |
+| Benutzer, Passwort | Der Benutzer aus `ari.conf` oder aus FreePBX                                                      |
+| Stasis-Anwendung   | Standardmäßig `gladys`: der Name in `Stasis(gladys)`                                              |
+| Erlaubte Nummern   | Die einzigen Nummern, die Szenen anrufen dürfen, durch Kommas getrennt                            |
+| Wählstring         | `{number}` wird durch die angerufene Nummer ersetzt                                               |
+| Anrufer-ID         | Wird auf dem angerufenen Telefon angezeigt, z. B. `Gladys <100>` (der Anbieter kann sie ersetzen) |
+| Eingehende Anrufe  | Im Wählplan weiter (Telefone klingeln) oder auflegen, ohne abzunehmen (kostenlos für den Anrufer) |
+| Sprache der Texte  | Sprache der Funktionsnamen und der Anrufergebnisse                                                |
+
+**Verbindung testen** prüft Adresse und Benutzer. **Testanruf** führt einen Anruf aus (ein Versuch, eine
+Wiedergabe).
+
+## Szenen
+
+- **Alarm per Telefon**: Auslöser „Alarm ausgelöst“ → Aktion „Anrufen und Nachricht abspielen“, Nummer
+  `+4915112345678`, Nachricht `custom/alarm`, 3 Wiedergaben, 5 Versuche, 60 s zwischen den Versuchen, „Auf Taste 1
+  warten“ aktiviert.
+- **Fehlalarm**: Auslöser „Alarm deaktiviert“ → Aktion „Anrufe stoppen“.
+- **Tor per Telefon**: Auslöser „Eingehender Anruf“, Nummer des Anrufers `+4915112345678` → Tor öffnen. Im Modus
+  „Auflegen, ohne abzunehmen“ kostet der Anruf den Anrufer nichts.
+- **Niemand hat bestätigt**: Auslöser „Ausgehender Anruf beendet“, Ergebnis „Keine Antwort“ → einer anderen Person
+  eine Nachricht senden.
+
+Die Szenenaktion kehrt sofort zurück (ein Anruf mit Wiederholungen dauert länger, als eine Szenenaktion darf): Das
+Ergebnis kommt über den Auslöser „Ausgehender Anruf beendet“ und die Funktion „Letzter ausgehender Anruf“. Die
+Nummer wird wie in den erlaubten Nummern geschrieben; Leerzeichen, Punkte und Bindestriche werden ignoriert. Ein
+zweiter Anruf an eine Nummer, die gerade angerufen wird, wird nicht ausgeführt.
+
+## Dashboard
+
+Das Widget **Telefonanrufe** zeigt die Verbindung zu Asterisk, die laufenden Anrufe, die Uhrzeit des letzten
+eingehenden und ausgehenden Anrufs mit Ergebnis und, während eines Anrufs, eine Taste zum Stoppen der Anrufe (in
+den Widget-Einstellungen ausblendbar).
+
+## Grenzen
+
+- **Keine Sprachsynthese**: Asterisk spielt aufgenommene Sounds ab. Nimm deine Nachrichten einmal auf (System
+  Recordings von FreePBX oder ein TTS-Werkzeug auf deinem Computer).
+- Nur die **erlaubten Nummern** können angerufen werden. Füge nie kostenpflichtige Sondernummern hinzu: Eine Szene
+  könnte sie in Schleife anrufen.
+- Die **Nummer des Anrufers kann gefälscht werden**: Verwende sie nicht allein, um eine Tür zu öffnen oder einen
+  Alarm zu deaktivieren.
+- Anrufe, die beim Neustart der Integration oder von Asterisk laufen, enden als fehlgeschlagen.
+- Nur die an `Stasis(gladys)` geleiteten Anrufe werden gesehen.
+- Ohne die Hardware entwickelt: Für die Tests wurde keine echte Anbieterleitung verwendet, nur Asterisk 23.5 mit
+  simulierten Telefonen. Rückmeldungen sind willkommen.
+
+## Fehlerbehebung
+
+- **„Asterisk antwortet nicht“**: Prüfe Adresse und Port, `http show status` in der Asterisk-Konsole und ob der
+  Gladys-Rechner Port 8088 erreicht.
+- **„Asterisk lehnt den ARI-Benutzer ab“**: Prüfe `ari.conf` (oder den ARI-Benutzer von FreePBX) und führe
+  `module reload res_ari.so` aus.
+- **Sofort „fehlgeschlagen“**: Der Wählstring ist falsch (`pjsip show endpoints`), oder der Trunk lehnt den Anruf
+  ab: Die Asterisk-Konsole sagt, warum.
+- **Die Nachricht bleibt stumm**: Der Sound existiert nicht; prüfe `core show file formats` und den Pfad unter
+  `sounds/<Sprache>/`.
+- **Kein Auslöser bei eingehendem Anruf**: Der Wählplan erreicht `Stasis(gladys)` nicht, oder der Name der
+  Anwendung weicht von der Konfiguration ab.
