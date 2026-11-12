@@ -111,7 +111,7 @@ realizada». El número se escribe como en los números permitidos; se ignoran e
 realiza una segunda llamada a un número al que ya se está llamando.
 
 El número de quien llama del desencadenante «Llamada recibida» se compara tal cual: escríbalo exactamente como lo
-muestra la función «Última llamada recibida» (los operadores envían a menudo `+34612345678` o `34612345678`).
+muestra la función «Última llamada recibida», sin el nombre entre paréntesis (los operadores envían a menudo `+34612345678` o `34612345678`).
 
 ## Panel
 

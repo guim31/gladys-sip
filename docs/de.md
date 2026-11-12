@@ -112,7 +112,7 @@ Nummer wird wie in den erlaubten Nummern geschrieben; Leerzeichen, Punkte und Bi
 zweiter Anruf an eine Nummer, die gerade angerufen wird, wird nicht ausgeführt.
 
 Die Nummer des Anrufers im Auslöser „Eingehender Anruf“ wird unverändert verglichen: Gib sie genau so ein, wie die
-Funktion „Letzter eingehender Anruf“ sie anzeigt (Anbieter senden oft `+4915112345678` oder `4915112345678`).
+Funktion „Letzter eingehender Anruf“ sie anzeigt, ohne den Namen in Klammern (Anbieter senden oft `+4915112345678` oder `4915112345678`).
 
 ## Dashboard
 

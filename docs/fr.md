@@ -111,7 +111,7 @@ Le numéro s'écrit comme dans les numéros autorisés ; espaces, points et tire
 un numéro déjà en cours d'appel n'est pas passé.
 
 Le numéro de l'appelant du déclencheur « Appel reçu » est comparé tel quel : saisissez-le exactement comme l'affiche
-la fonctionnalité « Dernier appel reçu » (les opérateurs envoient souvent `+33612345678` ou `33612345678`).
+la fonctionnalité « Dernier appel reçu », sans le nom entre parenthèses (les opérateurs envoient souvent `+33612345678` ou `33612345678`).
 
 ## Tableau de bord
 

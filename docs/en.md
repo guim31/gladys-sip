@@ -105,7 +105,7 @@ through the "Outgoing call ended" trigger and the "Last outgoing call" feature. 
 allowed numbers; spaces, dots and dashes are ignored. A second call to a number already being called is not placed.
 
 The caller number of the "Incoming call" trigger is compared as is: type it exactly as the "Last incoming call"
-feature shows it (operators often send `+33612345678` or `33612345678`).
+feature shows it, without the name in brackets (operators often send `+33612345678` or `33612345678`).
 
 ## Dashboard
 
