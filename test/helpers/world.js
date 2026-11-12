@@ -82,6 +82,8 @@ export function fakeAsterisk({ status = 200, info = ARI_EVENTS.info } = {}) {
     requests: [],
     sockets: [],
     failNext: null,
+    // Channels GET /channels lists.
+    liveChannels: [],
     get socket() {
       return asterisk.sockets.at(-1);
     },
@@ -111,6 +113,9 @@ export function fakeAsterisk({ status = 200, info = ARI_EVENTS.info } = {}) {
       }
       if (request.path === '/asterisk/info') {
         return Response.json(info);
+      }
+      if (request.method === 'GET' && request.path === '/channels') {
+        return Response.json(asterisk.liveChannels.map((id) => ({ id })));
       }
       if (request.method === 'DELETE') {
         return new Response('', { status: 204 });

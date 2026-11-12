@@ -44,6 +44,8 @@ export const CONNECTION_TEXT = {
 export const HUB_TIMINGS = {
   retryMinMs: 5_000,
   retryMaxMs: 5 * 60_000,
+  // An event stream open this long is stable.
+  stableMs: 60_000,
   // Values republished at least this often, or Gladys shows "no recent value".
   heartbeatMs: 12 * 3_600_000,
   heartbeatCheckMs: 3_600_000,
@@ -90,15 +92,22 @@ export class SipHub {
 
   async start(config) {
     this.config = config;
-    await this.publishDevice();
+    this.timers.clearInterval(this.heartbeatTimer);
     this.heartbeatTimer = this.timers.setInterval(
       () => this.heartbeat().catch(() => {}),
       this.timings.heartbeatCheckMs,
     );
     this.connect();
+    // After connect(): a Gladys hiccup here must not leave Asterisk unwatched.
+    await this.publishDevice();
   }
 
   async reconfigure(config) {
+    if (!this.config) {
+      // The first start failed: start again with the new settings.
+      await this.start(config);
+      return;
+    }
     const reconnect = connectionKey(config) !== connectionKey(this.config);
     const relabel = config.language !== this.config.language;
     this.config = config;
@@ -107,7 +116,7 @@ export class SipHub {
     }
     if (reconnect) {
       logger.info('Connection settings changed, reconnecting to Asterisk');
-      this.calls?.abandonAll();
+      this.calls?.abandonAll({ hangup: true });
       this.disconnect();
       this.failure = null;
       this.retryMs = this.timings.retryMinMs;
@@ -233,6 +242,10 @@ export class SipHub {
       this.socket = null;
       const wasConnected = this.connected;
       this.connected = false;
+      // A link that held a while starts the backoff again; a flapping one keeps it.
+      if (wasConnected && this.now() - this.openedAt >= this.timings.stableMs) {
+        this.retryMs = this.timings.retryMinMs;
+      }
       this.calls.abandonAll();
       this.setValue(FEATURE_KEYS.REACHABLE, 0);
       this.reportFailure('unreachable', 'the ARI event stream closed', wasConnected);
@@ -244,13 +257,16 @@ export class SipHub {
 
   onOpen() {
     this.connected = true;
-    this.retryMs = this.timings.retryMinMs;
+    this.openedAt = this.now();
     logger.info(
       `${this.failure ? 'Back in touch with' : 'Connected to'} Asterisk ${this.asteriskVersion ?? ''} (application "${this.config.ari_app}")`,
     );
     this.failure = null;
     this.setValue(FEATURE_KEYS.REACHABLE, 1);
     this.gladys.setConnectionStatus(true).catch(() => {});
+    this.calls
+      .hangupOrphans()
+      .catch((err) => logger.debug(`Orphan channels not checked: ${err.message}`));
     this.gladys.requestWidgetRefresh(WIDGET_KEY);
   }
 
@@ -332,6 +348,7 @@ export class SipHub {
     }
     const outcome = this.calls.place(request);
     if (outcome.started) {
+      this.gladys.requestWidgetRefresh(WIDGET_KEY);
       logger.info(`Calling ${request.number} (up to ${request.attempts} attempt(s))`);
     }
     return outcome;

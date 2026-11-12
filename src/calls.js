@@ -146,7 +146,10 @@ export class CallManager {
     this.channels.set(channelId, call);
     this.later(call, this.timings.maxAttemptMs, () => {
       this.logger.warn(`Call ${campaign.id}: attempt over the time limit, hanging up`);
-      this.endAttempt(call, call.answered ? 'answered' : 'no_answer');
+      this.endAttempt(
+        call,
+        call.acknowledged ? 'acknowledged' : call.answered ? 'answered' : 'no_answer',
+      );
       this.hangup(channelId);
     });
     this.logger.debug(`Call ${campaign.id}: attempt ${campaign.attempt}/${campaign.attempts}`);
@@ -158,8 +161,18 @@ export class CallManager {
         timeout: campaign.ringTimeoutS,
         appArgs: OUTGOING_ARG,
       })
+      .then(() => {
+        // Cancelled while the request was in flight: the channel exists now.
+        if (campaign.cancelled && !call.ended) {
+          this.hangup(channelId);
+        }
+      })
       .catch((err) => {
         this.logger.warn(`Call ${campaign.id}: the call could not be placed: ${err.message}`);
+        if (err.status === null) {
+          // A timeout: Asterisk may have created the channel anyway.
+          this.hangup(channelId);
+        }
         this.endAttempt(call, 'failed');
       });
   }
@@ -206,6 +219,10 @@ export class CallManager {
 
   answered(call) {
     call.answered = true;
+    if (call.campaign.cancelled) {
+      this.hangup(call.channelId);
+      return;
+    }
     this.logger.debug(`Call ${call.campaign.id}: answered`);
     this.playNext(call);
   }
@@ -330,9 +347,12 @@ export class CallManager {
    * retry could not be placed. Every campaign ends as failed (acknowledged if
    * the callee already pressed 1).
    */
-  abandonAll() {
+  abandonAll({ hangup = false } = {}) {
     for (const call of this.channels.values()) {
       call.ended = true;
+      if (hangup) {
+        this.hangup(call.channelId);
+      }
       for (const timer of call.timers) {
         this.timers.clearTimeout(timer);
       }
@@ -342,6 +362,16 @@ export class CallManager {
     for (const campaign of [...this.campaigns.values()]) {
       this.timers.clearTimeout(campaign.retryTimer);
       this.finish(campaign, campaign.lastResult === 'acknowledged' ? 'acknowledged' : 'failed');
+    }
+  }
+
+  /** Hangs up our channels Asterisk still holds that nobody follows (after a lost link). */
+  async hangupOrphans() {
+    const channels = await this.ari.request('GET', '/channels');
+    for (const channel of channels ?? []) {
+      if (channel.id?.startsWith(CHANNEL_PREFIX) && !this.channels.has(channel.id)) {
+        this.hangup(channel.id);
+      }
     }
   }
 

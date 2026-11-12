@@ -110,6 +110,9 @@ escena): el resultado llega por el desencadenante «Llamada realizada terminada�
 realizada». El número se escribe como en los números permitidos; se ignoran espacios, puntos y guiones. No se
 realiza una segunda llamada a un número al que ya se está llamando.
 
+El número de quien llama del desencadenante «Llamada recibida» se compara tal cual: escríbalo exactamente como lo
+muestra la función «Última llamada recibida» (los operadores envían a menudo `+34612345678` o `34612345678`).
+
 ## Panel
 
 El widget **Llamadas telefónicas** muestra el enlace con Asterisk, las llamadas en curso, la hora de la última
@@ -124,7 +127,8 @@ ocultar en la configuración del widget).
   podría llamarlos en bucle.
 - El **número de quien llama puede falsificarse**: no lo use por sí solo para abrir una puerta o desarmar una
   alarma.
-- Las llamadas en curso cuando la integración o Asterisk se reinician terminan con error.
+- Las llamadas en curso cuando Asterisk se reinicia o se corta el enlace terminan con error; cuando la propia
+  integración se reinicia, se pierden (sin desencadenante).
 - Solo se ven las llamadas enviadas a `Stasis(gladys)`.
 - Desarrollada sin el hardware: no se usó ninguna línea de operador real en las pruebas, solo Asterisk 23.5 con
   teléfonos simulados. Sus comentarios son bienvenidos.

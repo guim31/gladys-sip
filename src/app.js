@@ -113,7 +113,7 @@ export function registerHandlers(gladys, options = {}) {
 
   gladys.on('connected', async () => {
     try {
-      if (started) {
+      if (started && hub.config) {
         // Gladys restarted: what it may have lost is republished.
         await hub.publishDevice();
         await hub.onDeviceCreated();

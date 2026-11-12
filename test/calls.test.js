@@ -238,3 +238,91 @@ test('Q.850 causes of an unanswered call', () => {
   assert.equal(unansweredResult(0), 'failed');
   assert.equal(unansweredResult(34), 'failed');
 });
+
+test('a call started refreshes the widget at once', async () => {
+  const { gladys, app } = await createWorld();
+  const before = gladys.fake.widgetRefreshes.length;
+  await gladys.fake.sceneAction('call', ALARM);
+  assert.equal(gladys.fake.widgetRefreshes.length, before + 1);
+  app.stop();
+});
+
+test('acknowledged then stuck: the time limit keeps the acknowledgement', async () => {
+  const asterisk = fakeAsterisk();
+  const { gladys, timers, app } = await createWorld({ asterisk });
+  await gladys.fake.sceneAction('call', { ...ALARM, require_ack: true, attempts: 3 });
+  const channelId = lastChannel(asterisk);
+  await answer(asterisk, channelId);
+  asterisk.failNext = (request) => (request.method === 'DELETE' ? 500 : null);
+  asterisk.socket.event(ariEvent('ChannelDtmfReceived', { channelId, digit: '1' }));
+  await timers.advance(5 * 60_000);
+  assert.equal(gladys.fake.sceneEvents.at(-1).data.result, 'acknowledged');
+  assert.equal(asterisk.calls('POST', '/channels').length, 1, 'no call back');
+  app.stop();
+});
+
+test('cancelled while the originate is in flight: hung up, never played', async () => {
+  const asterisk = fakeAsterisk();
+  const { gladys, hub, app } = await createWorld({ asterisk });
+  hub.placeCall({
+    number: '100',
+    media: ['sound:x'],
+    repeat: 1,
+    attempts: 2,
+    retryDelayMs: 0,
+    ringTimeoutS: 30,
+    requireAck: false,
+  });
+  hub.cancelCalls(null);
+  await settle();
+  const channelId = lastChannel(asterisk);
+  assert.ok(asterisk.calls('DELETE', `/channels/${channelId}`).length >= 1);
+  await answer(asterisk, channelId);
+  assert.equal(asterisk.calls('POST', `/channels/${channelId}/play/`).length, 0);
+  await destroyed(asterisk, channelId);
+  assert.equal(gladys.fake.sceneEvents.at(-1).data.result, 'cancelled');
+  app.stop();
+});
+
+test('an originate timeout hangs the channel up in case it was created', async () => {
+  const asterisk = fakeAsterisk();
+  const { gladys, app } = await createWorld({ asterisk });
+  const original = asterisk.fetch;
+  asterisk.fetch = async (url, options) => {
+    if (options.method === 'POST' && new URL(url).pathname === '/ari/channels') {
+      throw new DOMException('timeout', 'TimeoutError');
+    }
+    return original(url, options);
+  };
+  app.hub.calls.ari.fetch = asterisk.fetch;
+  await gladys.fake.sceneAction('call', { ...ALARM, attempts: 1 });
+  await settle();
+  const channelId = asterisk.requests.findLast((r) => r.method === 'DELETE')?.path;
+  assert.match(channelId ?? '', /^\/channels\/gladys-/);
+  app.stop();
+});
+
+test('after a lost link, our channels left in Asterisk are hung up', async () => {
+  const asterisk = fakeAsterisk();
+  const { timers, app } = await createWorld({ asterisk });
+  asterisk.liveChannels = ['gladys-old-1', 'PJSIP/100-0001'];
+  asterisk.socket.close();
+  await settle();
+  await timers.advance(5_000);
+  asterisk.socket.emit('open');
+  await settle();
+  await settle();
+  assert.equal(asterisk.calls('DELETE', '/channels/gladys-old-1').length, 1);
+  assert.equal(asterisk.calls('DELETE', '/channels/PJSIP/100-0001').length, 0);
+  app.stop();
+});
+
+test('new connection settings hang up the calls in progress', async () => {
+  const { gladys, asterisk, app } = await createWorld();
+  await gladys.fake.sceneAction('call', ALARM);
+  const channelId = lastChannel(asterisk);
+  await gladys.fake.configUpdated({ ...BASE_CONFIG, ari_username: 'other' });
+  assert.equal(asterisk.calls('DELETE', `/channels/${channelId}`).length, 1);
+  assert.equal(gladys.fake.sceneEvents.at(-1).data.result, 'failed');
+  app.stop();
+});

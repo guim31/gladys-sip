@@ -110,6 +110,9 @@ peut) : le résultat arrive par le déclencheur « Appel passé terminé » et l
 Le numéro s'écrit comme dans les numéros autorisés ; espaces, points et tirets sont ignorés. Un second appel vers
 un numéro déjà en cours d'appel n'est pas passé.
 
+Le numéro de l'appelant du déclencheur « Appel reçu » est comparé tel quel : saisissez-le exactement comme l'affiche
+la fonctionnalité « Dernier appel reçu » (les opérateurs envoient souvent `+33612345678` ou `33612345678`).
+
 ## Tableau de bord
 
 Le widget **Appels téléphoniques** affiche le lien avec Asterisk, les appels en cours, l'heure du dernier appel reçu
@@ -124,7 +127,8 @@ les réglages du widget).
   l'appeler en boucle.
 - Le **numéro de l'appelant peut être usurpé** par n'importe qui : ne l'utilisez pas seul pour ouvrir une porte ou
   désarmer une alarme.
-- Les appels en cours quand l'intégration ou Asterisk redémarre se terminent en échec.
+- Les appels en cours quand Asterisk redémarre ou que le lien avec lui tombe se terminent en échec ; quand
+  l'intégration elle-même redémarre, ils sont perdus (pas de déclencheur).
 - Seuls les appels envoyés dans `Stasis(gladys)` sont vus.
 - Développée sans le matériel : aucune vraie ligne d'opérateur n'a servi aux tests, seulement Asterisk 23.5 avec des
   téléphones simulés. Vos retours sont les bienvenus.

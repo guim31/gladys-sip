@@ -111,6 +111,9 @@ Ergebnis kommt über den Auslöser „Ausgehender Anruf beendet“ und die Funkt
 Nummer wird wie in den erlaubten Nummern geschrieben; Leerzeichen, Punkte und Bindestriche werden ignoriert. Ein
 zweiter Anruf an eine Nummer, die gerade angerufen wird, wird nicht ausgeführt.
 
+Die Nummer des Anrufers im Auslöser „Eingehender Anruf“ wird unverändert verglichen: Gib sie genau so ein, wie die
+Funktion „Letzter eingehender Anruf“ sie anzeigt (Anbieter senden oft `+4915112345678` oder `4915112345678`).
+
 ## Dashboard
 
 Das Widget **Telefonanrufe** zeigt die Verbindung zu Asterisk, die laufenden Anrufe, die Uhrzeit des letzten
@@ -125,7 +128,8 @@ den Widget-Einstellungen ausblendbar).
   könnte sie in Schleife anrufen.
 - Die **Nummer des Anrufers kann gefälscht werden**: Verwende sie nicht allein, um eine Tür zu öffnen oder einen
   Alarm zu deaktivieren.
-- Anrufe, die beim Neustart der Integration oder von Asterisk laufen, enden als fehlgeschlagen.
+- Anrufe, die beim Neustart von Asterisk oder bei einem Verbindungsabbruch laufen, enden als fehlgeschlagen; beim
+  Neustart der Integration selbst gehen sie verloren (kein Auslöser).
 - Nur die an `Stasis(gladys)` geleiteten Anrufe werden gesehen.
 - Ohne die Hardware entwickelt: Für die Tests wurde keine echte Anbieterleitung verwendet, nur Asterisk 23.5 mit
   simulierten Telefonen. Rückmeldungen sind willkommen.

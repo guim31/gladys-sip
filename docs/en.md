@@ -104,6 +104,9 @@ The scene action returns at once (a call with retries outlasts what a scene acti
 through the "Outgoing call ended" trigger and the "Last outgoing call" feature. The number must be written as in the
 allowed numbers; spaces, dots and dashes are ignored. A second call to a number already being called is not placed.
 
+The caller number of the "Incoming call" trigger is compared as is: type it exactly as the "Last incoming call"
+feature shows it (operators often send `+33612345678` or `33612345678`).
+
 ## Dashboard
 
 The **Phone calls** widget shows the link to Asterisk, the calls in progress, the time of the last incoming and
@@ -116,7 +119,8 @@ the widget settings).
   TTS tool on your computer).
 - Only the **allowed numbers** can be called. Never add premium-rate numbers: a scene could call them in a loop.
 - The **caller number can be spoofed** by anyone: do not use it alone to unlock a door or disarm an alarm.
-- Calls in progress when the integration or Asterisk restarts are ended as failed.
+- Calls in progress when Asterisk restarts or the link to it drops end as failed; when the integration itself
+  restarts, they are lost (no trigger).
 - Only the calls routed to `Stasis(gladys)` are seen.
 - Developed without the hardware: no real operator line was used in the tests, only Asterisk 23.5 with simulated
   phones. Feedback welcome.

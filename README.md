@@ -46,7 +46,8 @@ ARI address, user and password, the allowed numbers and the dial string, then pr
 - No text-to-speech: messages are recorded sounds.
 - Only the allowed numbers can be called; premium-rate numbers must never be added.
 - The caller number can be spoofed: it must not be the only lock of a door or an alarm.
-- Calls in progress when the integration or Asterisk restarts end as failed.
+- Calls in progress end as failed when Asterisk restarts or the link drops, and are lost when the integration
+  restarts.
 
 ## Development
 

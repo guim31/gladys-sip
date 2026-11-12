@@ -36,7 +36,12 @@ export function parseMedia(raw) {
   for (const item of items) {
     const match = item.match(/^([a-z]+):(.*)$/);
     const [kind, value] = match ? [match[1], match[2]] : ['sound', item];
-    if (!MEDIA_KINDS.includes(kind) || !MEDIA_VALUE.test(value) || value.includes('..')) {
+    if (
+      !MEDIA_KINDS.includes(kind) ||
+      !MEDIA_VALUE.test(value) ||
+      value.includes('..') ||
+      value.startsWith('/')
+    ) {
       return null;
     }
     media.push(`${kind}:${value}`);

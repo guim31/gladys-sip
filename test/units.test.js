@@ -69,6 +69,7 @@ test('message: Asterisk sounds and ARI media, never a URL or a path out', () => 
   assert.equal(parseMedia('sound:http://evil.example/x.wav'), null);
   assert.equal(parseMedia('../../etc/passwd'), null);
   assert.equal(parseMedia('file:custom/alarm'), null);
+  assert.equal(parseMedia('sound:/var/spool/asterisk/voicemail/x'), null);
   assert.equal(parseMedia(Array(11).fill('beep').join(',')), null);
 });
 
