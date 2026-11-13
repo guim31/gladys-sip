@@ -32,14 +32,16 @@ pushing.
 
 ```
 index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/app.js                        registers every SDK handler on the hub; Configuration buttons
+src/hub.js                        ARI connection loop, device states, scene events, heartbeat
+src/calls.js                      call logic (campaigns, retries, DTMF acknowledgement, incoming)
+src/ari.js                        minimal ARI client: REST (fetch) + event WebSocket (global WebSocket)
+src/devices.js                    the "Asterisk server" device, feature names, result texts
+src/scenes.js                     scene actions `call` / `cancel_calls`, media and allow-list checks
+src/widgets.js                    dashboard widget `sip`
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
@@ -251,3 +253,24 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## Intégration SIP (Asterisk ARI)
+
+- **Voie choisie : ARI** (REST + WebSocket d'événements), pas AMI ni SIP/RTP dans le conteneur. `POST /channels`
+  avec `app=gladys` place l'appel directement dans Stasis : `StasisStart` arrive **au décroché**, `ChannelDestroyed`
+  (avec la cause Q.850) à la fin, sans `StasisStart` si personne n'a décroché. Les identifiants de canal sont choisis
+  par l'intégration (`gladys-<campagne>-<tentative>`) : un événement qui précède la réponse HTTP reste attribué.
+- Le WebSocket de Node ne pose pas d'en-tête : les identifiants passent par `api_key=user:pass` dans l'URL, qui ne
+  doit jamais être journalisée. Un `GET /asterisk/info` en Basic avant d'ouvrir le WebSocket distingue 401 et
+  injoignable.
+- **Pas de synthèse vocale** : ARI ne lit que des médias (`sound:`, `digits:`, `number:`, `tone:`…) ; aucun moteur
+  TTS de Gladys n'est accessible à une intégration `device`. Messages préenregistrés, URL interdites.
+- Une action de scène est plafonnée à 120 s : `call` rend la main aussitôt, le résultat passe par le déclencheur
+  `call_finished` et la fonctionnalité « Dernier appel passé ».
+- Canaux `Local/…` : la cause de fin vaut 0 pour un « occupé » (testé sur Asterisk 23.5), d'où « échec » ; un trunk
+  PJSIP donne 17 (occupé). `SendDTMF` côté `;2` arrive bien en `ChannelDtmfReceived` sur le canal `;1` en Stasis.
+- Un appel entrant (`StasisStart` d'un canal inconnu) est relâché par `POST /channels/{id}/continue` (priorité
+  suivante du plan) ou raccroché sans décrocher. Un canal `gladys-…` inconnu (avant un redémarrage) est raccroché.
+- Banc de test : `andrius/asterisk` (Asterisk 23.5, sans sons fournis : en monter un dans
+  `sounds/en/custom/`), contextes `phones` (100 acquitte, 101 décroche sans rien, 102 sonne, 103 occupé) et `sim`
+  (appel entrant avec identifiant d'appelant).
