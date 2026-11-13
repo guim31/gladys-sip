@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-13
+
 ### Added
 
 - "Call and play a message" scene action: calls an allowed number through your Asterisk or FreePBX (ARI), plays
@@ -22,3 +24,6 @@ the notes of the version's GitHub Release.
 - "Phone calls" dashboard widget, with a button to stop the calls in progress.
 - "Test the connection" and "Test call" buttons in the configuration.
 - Documentation in English, French, German and Spanish, with the Asterisk and FreePBX set-up.
+
+[Unreleased]: https://github.com/guim31/gladys-sip/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-sip/releases/tag/v1.0.0
